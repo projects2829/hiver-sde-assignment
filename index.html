@@ -35,47 +35,51 @@
 
 <script>
   
-  const BACKEND_URL = "https://applesupport-backend.onrender.com/api/chat";
+ 
+const RENDER_BASE = "https://applesupport-backend.onrender.com"; 
+const BACKEND_URL = `${RENDER_BASE}/api/chat`;
 
-  async function sendTweet() {
-    const tweet = document.getElementById("tweetInput").value;
-    const btn = document.getElementById("sendBtn");
-    const output = document.getElementById("output");
-    
-    if(!tweet.trim()) return alert("Tweet likhein!");
+async function sendTweet() {
+  const tweet = document.getElementById("tweetInput").value;
+  const btn = document.getElementById("sendBtn");
+  const output = document.getElementById("output");
 
-    btn.innerText = "Processing...";
-    btn.disabled = true;
+  if (!tweet.trim()) return alert("Please enter a tweet!");
 
-    try {
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tweet: tweet })
-      });
-      
-      const data = await res.json();
-      const respObj = data.response || data;
+  btn.innerText = "Processing...";
+  btn.disabled = true;
 
-      output.style.display = "block";
-      document.getElementById("intentText").innerText = respObj.intent || "general_query";
-      document.getElementById("replyText").innerText = respObj.message || JSON.stringify(respObj);
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ tweet: tweet })
+    });
 
-      const badge = document.getElementById("statusBadge");
-      if(respObj.escalate) {
-        badge.className = "badge badge-escalate";
-        badge.innerText = "ESCALATED TO HUMAN AGENT";
-      } else {
-        badge.className = "badge badge-auto";
-        badge.innerText = "AUTO-REPLIED BY AI";
-      }
-    } catch(err) {
-      alert("Error processing request: " + err);
-    } finally {
-      btn.innerText = "Send Tweet";
-      btn.disabled = false;
+    const data = await res.json();
+
+    output.style.display = "block";
+    document.getElementById("intentText").innerText = data.intent || "general_query";
+    document.getElementById("replyText").innerText = data.message || data.draft_reply || JSON.stringify(data);
+
+    const badge = document.getElementById("statusBadge");
+    if (data.escalate) {
+      badge.className = "badge badge-escalate";
+      badge.innerText = "🚨 ESCALATED TO HUMAN AGENT";
+    } else {
+      badge.className = "badge badge-auto";
+      badge.innerText = "🤖 AUTO-REPLIED BY AI";
     }
+  } catch (err) {
+    alert("Connection Error: " + err.message);
+  } finally {
+    btn.innerText = "Send Tweet";
+    btn.disabled = false;
   }
+}
 </script>
 
 </body>
