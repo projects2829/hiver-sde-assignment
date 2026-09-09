@@ -5,10 +5,10 @@ from test_agent import process_tweet
 
 app = FastAPI(title="AppleSupport AI Agent API")
 
-# Frontend se requests allow karne ke liye CORS setup
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,7 +22,7 @@ def home():
     return {"status": "AppleSupport AI Agent API is running!"}
 
 @app.post("/api/chat")
-def chat_endpoint(payload: TweetRequest):
+async def chat_endpoint(payload: TweetRequest):
     if not payload.tweet.strip():
         raise HTTPException(status_code=400, detail="Tweet text cannot be empty")
     
