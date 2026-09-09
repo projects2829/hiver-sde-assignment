@@ -47,6 +47,8 @@ Return JSON structure:
 def home():
     return {"status": "AppleSupport AI Agent API is running!"}
 
+# Handling POST on both Root "/" and "/api/chat" so it never fails
+@app.api_route("/", methods=["POST"])
 @app.api_route("/api/chat", methods=["POST", "GET", "OPTIONS"])
 @app.api_route("/api/chat/", methods=["POST", "GET", "OPTIONS"])
 async def chat_endpoint(request: Request):
