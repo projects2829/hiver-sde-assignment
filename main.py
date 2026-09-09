@@ -2,12 +2,11 @@ import os
 import json
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from openai import OpenAI
 
 app = FastAPI(title="AppleSupport AI Agent API")
 
-# Explicit CORS Settings
+# Setup CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,30 +35,39 @@ Rules for Escalation:
 - Set 'escalate' to true IF the query involves unauthorized billing, financial refund requests, severe user frustration/abuse, or personal security breaches (hacked Apple ID).
 - Otherwise, set 'escalate' to false.
 
-Response format MUST be valid JSON:
+Return JSON structure:
 {{
   "intent": "<category>",
   "escalate": <true/false>,
-  "message": "<your reply here>"
+  "message": "<reply string>"
 }}
 """
-
-class TweetRequest(BaseModel):
-    tweet: str
 
 @app.get("/")
 def home():
     return {"status": "AppleSupport AI Agent API is running!"}
 
-
-@app.post("/api/chat")
-@app.post("/api/chat/")
-async def chat_endpoint(payload: TweetRequest):
-    if not payload.tweet.strip():
-        raise HTTPException(status_code=400, detail="Tweet cannot be empty")
-    
+@app.api_route("/api/chat", methods=["POST", "GET", "OPTIONS"])
+@app.api_route("/api/chat/", methods=["POST", "GET", "OPTIONS"])
+async def chat_endpoint(request: Request):
+    if request.method == "OPTIONS":
+        return {"status": "ok"}
+        
     try:
-        user_payload = f'Customer Tweet: "{payload.tweet}"'
+        body = await request.json()
+        tweet_text = body.get("tweet", "")
+    except Exception:
+        tweet_text = ""
+
+    if not tweet_text.strip():
+        return {
+            "intent": "general_query",
+            "escalate": False,
+            "message": "Please enter a valid tweet to test."
+        }
+
+    try:
+        user_payload = f'Customer Tweet: "{tweet_text}"'
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
